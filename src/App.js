@@ -1,8 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CreateGroup } from './components/CreateGroup';
-import { Route } from 'react-router-dom';
 import { AddMembers } from './components/AddMembers';
 import { ExpenseMain } from './components/ExpenseMain';
 
