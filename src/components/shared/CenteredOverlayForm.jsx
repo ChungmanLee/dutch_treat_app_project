@@ -1,7 +1,7 @@
 import { Button, Container, Form, Row } from "react-bootstrap"
 import styled from "styled-components"
 import { OverlayWrapper } from "./OverlayWrapper"
-import { ServiceLogo, StyledLogoDutch } from "./ServiceLogo"
+import { ServiceLogo } from "./ServiceLogo"
 
 export const CenteredOverlayForm = ({title, children, handleSubmit, validated}) => {
     return (
