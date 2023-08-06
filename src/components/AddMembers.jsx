@@ -37,7 +37,7 @@ export const AddMembers = () => {
         >
 
             <InputTags
-                placeholder="space btween names"
+                placeholder="space(mobile-enter) btween names"
                 onTags={(value) => setGroupMembers(value.values)}
             />
             {validated && groupMembers.length === 0 && (
