@@ -6,6 +6,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "aws-amplify": "^5.3.6",
+    "aws-sdk": "^2.1430.0",
     "bootstrap": "^5.3.1",
     "bootstrap-tagsinput": "^0.7.1",
     "html-to-image": "^1.11.11",
@@ -19,6 +20,7 @@
     "recoil": "^0.7.7",
     "save": "^2.9.0",
     "styled-components": "^6.0.7",
+    "uuid": "^9.0.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -49,6 +51,7 @@
     "@babel/core": "^7.22.9",
     "@babel/preset-react": "^7.22.5",
     "@babel/preset-typescript": "^7.22.5",
-    "@testing-library/jest-dom": "^5.17.0"
+    "@testing-library/jest-dom": "^5.17.0",
+    "recoil-toolkit": "^0.3.0"
   }
 }

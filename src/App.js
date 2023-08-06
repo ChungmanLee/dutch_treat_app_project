@@ -7,6 +7,11 @@ import { RecoilRoot } from 'recoil';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ROUTES } from "./routes"
 
+import{ Amplify } from "aws-amplify"
+import awsmobile from "./aws-exorts"
+
+Amplify.configure(awsmobile)
+
 function App() {
   return (
     <BrowserRouter>
