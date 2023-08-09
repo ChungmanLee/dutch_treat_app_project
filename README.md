@@ -1,3 +1,16 @@
+main codes are in the components folder in the src folder.
+backend folder is in ./amplify/function/src/app.js and others.
+
+
+
+
+
+
+
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

@@ -25,7 +25,7 @@ export const calculateMinTransaction = (expenses, members, amountPerPerson) => {
         membersToPay[payer] -= amount
     })
 
-    //make an array that is sorted by amount with ascending sort.
+    //3. make an array that is sorted by amount with ascending sort.
     const sortedMembersToPay = Object.keys(membersToPay)
         .map(member => (
             { member: member, amount: membersToPay[member] }

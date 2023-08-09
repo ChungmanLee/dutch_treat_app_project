@@ -4,9 +4,12 @@ import { useRecoilValue, useSetRecoilState } from "recoil"
 import { groupMembersState } from "./state/groupMembers"
 import { expensesState } from "./state/expenses"
 import { styled } from "styled-components"
+import { API } from "aws-amplify"
+import { groupIdState } from "./state/groupId"
 
 export const AddExpenseForm = () => {
     const members = useRecoilValue(groupMembersState)
+    const guid = useRecoilValue(groupIdState)
 
     const today = new Date()
     const [desc, setDesc] = useState('')
@@ -33,111 +36,111 @@ export const AddExpenseForm = () => {
         return descValid && payerValid && amountValid
     }// check if the form is valid and update state
 
-    const handleSubmit = (event) => {
-        event.preventDefault()
+const handleSubmit = (event) => {
+    event.preventDefault()
 
-        console.log(date, desc, amount, payer)//test
-        if (checkFormValidity()) {
-            //store data
-            const newExpense = {
-                date,
-                desc,
-                amount,
-                payer,
-            }
-            setExpense(expense => [
-                ...expense,
-                newExpense,
-            ])
+    console.log(date, desc, amount, payer)//test
+    if (checkFormValidity()) {
+        //store data
+        const newExpense = {
+            date,
+            desc,
+            amount,
+            payer,
         }
-        setValidated(true)
+        setExpense(expense => [
+            ...expense,
+            newExpense,
+        ])
     }
+    setValidated(true)
+}
 
-    return (
-        <StyledWrapper>
-            <Form noValidate onSubmit={handleSubmit}>
-                <StyledTitle>1. Add Detail</StyledTitle>
-                <Row>
-                    <Col xs={12}>
-                        <Form.Group>
-                            <Form.Control
-                                type="date"
-                                placeholder="Choose the Date"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                            />
-                        </Form.Group>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col xs={12}>
-                        <Form.Group>
-                            <Form.Control
-                                type="text"
-                                placeholder="Enter the Description"
-                                isValid={isDescValid}
-                                isInvalid={!isDescValid && validated}
-                                value={desc}
-                                onChange={({ target }) => setDesc(target.value)}
-                            />
-                            <Form.Control.Feedback
-                                type="invalid"
-                                data-valid={isDescValid}
-                            >
-                                Please enter the description.
-                            </Form.Control.Feedback>
-                        </Form.Group>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col xs={12} lg={6}>
-                        <Form.Group>
-                            <Form.Control
-                                type="number"
-                                placeholder="Amount"
-                                value={amount}
-                                isValid={isAmountValid}
-                                isInvalid={!isAmountValid && validated}
-                                onChange={({ target }) => setAmount(target.value)}
-                            />
-                            <Form.Control.Feedback
-                                type="invalid"
-                                data-valid={isAmountValid}
-                            >
-                                The amount should be more than 0 euro.
-                            </Form.Control.Feedback>
-                        </Form.Group>
-                    </Col>
-                    <Col xs={12} lg={6}>
-                        <Form.Group>
-                            <Form.Select
-                                defaultValue=""
-                                onChange={({ target }) => setPayer(target.value)}
-                                isValid={isPayerValid}
-                                isInvalid={!isPayerValid && validated}
-                            >
-                                <option disabled value="">Choose a Payer</option>
-                                {members.map(member =>
-                                    <option key={member}>{member}</option>
-                                )}
-                            </Form.Select>
-                            <Form.Control.Feedback
-                                type="invalid"
-                                data-valid={isPayerValid}
-                            >
-                                Please choose a payer.
-                            </Form.Control.Feedback>
-                        </Form.Group>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col xs='12' className="d-grid gap-2">
-                        <StyledSubmitButton>Add</StyledSubmitButton>
-                    </Col>
-                </Row>
-            </Form>
-        </StyledWrapper>
-    )
+return (
+    <StyledWrapper>
+        <Form noValidate onSubmit={handleSubmit}>
+            <StyledTitle>1. Add Detail</StyledTitle>
+            <Row>
+                <Col xs={12}>
+                    <Form.Group>
+                        <Form.Control
+                            type="date"
+                            placeholder="Choose the Date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                        />
+                    </Form.Group>
+                </Col>
+            </Row>
+            <Row>
+                <Col xs={12}>
+                    <Form.Group>
+                        <Form.Control
+                            type="text"
+                            placeholder="Enter the Description"
+                            isValid={isDescValid}
+                            isInvalid={!isDescValid && validated}
+                            value={desc}
+                            onChange={({ target }) => setDesc(target.value)}
+                        />
+                        <Form.Control.Feedback
+                            type="invalid"
+                            data-valid={isDescValid}
+                        >
+                            Please enter the description.
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+            <Row>
+                <Col xs={12} lg={6}>
+                    <Form.Group>
+                        <Form.Control
+                            type="number"
+                            placeholder="Amount"
+                            value={amount}
+                            isValid={isAmountValid}
+                            isInvalid={!isAmountValid && validated}
+                            onChange={({ target }) => setAmount(target.value)}
+                        />
+                        <Form.Control.Feedback
+                            type="invalid"
+                            data-valid={isAmountValid}
+                        >
+                            The amount should be more than 0 euro.
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+                <Col xs={12} lg={6}>
+                    <Form.Group>
+                        <Form.Select
+                            defaultValue=""
+                            onChange={({ target }) => setPayer(target.value)}
+                            isValid={isPayerValid}
+                            isInvalid={!isPayerValid && validated}
+                        >
+                            <option disabled value="">Choose a Payer</option>
+                            {members.map(member =>
+                                <option key={member}>{member}</option>
+                            )}
+                        </Form.Select>
+                        <Form.Control.Feedback
+                            type="invalid"
+                            data-valid={isPayerValid}
+                        >
+                            Please choose a payer.
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+            <Row>
+                <Col xs='12' className="d-grid gap-2">
+                    <StyledSubmitButton>Add</StyledSubmitButton>
+                </Col>
+            </Row>
+        </Form>
+    </StyledWrapper>
+)
 }
 
 

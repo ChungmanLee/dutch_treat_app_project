@@ -6,36 +6,24 @@ or in the "license" file accompanying this file. This file is distributed on an 
 See the License for the specific language governing permissions and limitations under the License.
 */
 
-
 const AWS = require("aws-sdk")
-const { DynamoDBClient,  UpdateItemCommand } = require('@aws-sdk/client-dynamodb');
-const { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand} = require('@aws-sdk/lib-dynamodb');
-const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
-const bodyParser = require('body-parser')
-const express = require('express')
-
-const ddbClient = new DynamoDBClient({ region: process.env.TABLE_REGION });
-const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
-
-AWS.config.update({ region: process.env.TABLE_REGION })
-const dynamodb = new AWS.DynamoDB.DocumentClient()
-
+const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware")
+const bodyParser = require("body-parser")
+const express = require("express")
 const uuidv1 = require("uuid").v1
 
-let tableName = "groups";
+AWS.config.update({ region: process.env.TABLE_REGION })
+
+const dynamodb = new AWS.DynamoDB.DocumentClient()
+
+let tableName = "groups"
 if (process.env.ENV && process.env.ENV !== "NONE") {
-  tableName = tableName + '-' + process.env.ENV;
+  tableName = tableName + "-" + process.env.ENV
 }
 
-const partitionKeyName = "guid";
-const partitionKeyType = "S";
-const sortKeyName = "";
-const sortKeyType = "";
-const hasSortKey = sortKeyName !== "";
-const path = "/groups";
-const UNAUTH = 'UNAUTH';
-const hashKeyPath = '/:' + partitionKeyName;
-const sortKeyPath = hasSortKey ? '/:' + sortKeyName : '';
+const partitionKeyName = "guid"
+const path = "/groups"
+const hashKeyPath = "/:" + partitionKeyName
 
 // declare a new express app
 const app = express()
@@ -43,25 +31,72 @@ app.use(bodyParser.json())
 app.use(awsServerlessExpressMiddleware.eventContext())
 
 // Enable CORS for all methods
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*")
   res.header("Access-Control-Allow-Headers", "*")
   next()
-});
+})
 
-// convert url string param to expected Type
-const convertUrlType = (param, type) => {
-  switch(type) {
-    case "N":
-      return Number.parseInt(param);
-    default:
-      return param;
+/*****************************************
+ * HTTP Get method for get single object -- 그룹 정보 읽기 API *
+ *****************************************/
+app.get(path + hashKeyPath, function (req, res) {
+  let getItemParams = {
+    TableName: tableName,
+    Key: { [partitionKeyName]: req.params[partitionKeyName] },
   }
-}
 
-/********************************
- * HTTP Get method to input expense to the group * - input expense API
- ********************************/
+  dynamodb.get(getItemParams, (err, data) => {
+    if (err) {
+      res.statusCode = 500
+      res.json({ error: "Could not load items: " + err.message })
+    } else if (Object.keys(data).length === 0) {
+      res.statusCode = 404
+      res.json({ error: "Item not found" })
+    } else {
+      res.json({ data: data.Item })
+    }
+  })
+})
+
+/************************************
+ * HTTP put method for adding an expense to the group - 결제 통화 설정 API *
+ *************************************/
+app.put(`${path}${hashKeyPath}/currencyCode`, function (req, res) {
+  const guid = req.params[partitionKeyName]
+  const { currencyCode } = req.body
+
+  if (!currencyCode) {
+    res.statusCode = 400
+    res.json({ error: "Invalid currency code" })
+    return
+  }
+
+  let updateItemParams = {
+    TableName: tableName,
+    Key: {
+      [partitionKeyName]: guid,
+    },
+    UpdateExpression: "SET currencyCode = :currencyCode",
+    ExpressionAttributeValues: {
+      ":currencyCode": currencyCode,
+    },
+  }
+
+  dynamodb.update(updateItemParams, (err, data) => {
+    if (err) {
+      res.statusCode = 500
+      res.json({ error: err })
+    } else {
+      res.statusCode = 200
+      res.json({ data: data })
+    }
+  })
+})
+
+/************************************
+ * HTTP put method for adding an expense to the group - 비용 추가 API *
+ *************************************/
 app.put(`${path}${hashKeyPath}/expenses`, function (req, res) {
   const guid = req.params[partitionKeyName]
   const { expense } = req.body
@@ -73,7 +108,7 @@ app.put(`${path}${hashKeyPath}/expenses`, function (req, res) {
     !expense.amount
   ) {
     res.statusCode = 400
-    res.json({ error: "Invalid expense details" })
+    res.json({ error: "Invalid expense object" })
     return
   }
 
@@ -102,9 +137,46 @@ app.put(`${path}${hashKeyPath}/expenses`, function (req, res) {
 })
 
 /************************************
-* HTTP put method for adding members to the group API * - members API
-*************************************/
+ * HTTP put method for replacing the entire expenses to the group - 전체 비용 업데이트 API *
+ *************************************/
+app.put(`${path}${hashKeyPath}/expenses/replace`, function (req, res) {
+  const guid = req.params[partitionKeyName]
+  const { expenses } = req.body
 
+  if (
+      !expenses || expenses.length === 0
+  ) {
+    res.statusCode = 400
+    res.json({ error: "Invalid expenses object" })
+    return
+  }
+
+  let updateItemParams = {
+    TableName: tableName,
+    Key: {
+      [partitionKeyName]: guid,
+    },
+    UpdateExpression:
+        "SET expenses = :vals",
+    ExpressionAttributeValues: {
+      ":vals": expenses,
+    },
+  }
+
+  dynamodb.update(updateItemParams, (err, data) => {
+    if (err) {
+      res.statusCode = 500
+      res.json({ error: err })
+    } else {
+      res.statusCode = 200
+      res.json({ data: data })
+    }
+  })
+})
+
+/************************************
+ * HTTP put method for adding members to the group - 멤버 추가 API *
+ *************************************/
 app.put(`${path}${hashKeyPath}/members`, function (req, res) {
   const guid = req.params[partitionKeyName]
   const { members } = req.body
@@ -145,66 +217,43 @@ app.put(`${path}${hashKeyPath}/members`, function (req, res) {
 })
 
 /************************************
-* HTTP post method for creating a group name* -group name API
-*************************************/
+ * HTTP post method for creating a group - 그룹 생성 API *
+ *************************************/
 
-app.post(path, async function(req, res) {
+app.post(path, function (req, res) {
   const { groupName } = req.body
   const guid = uuidv1()
 
   if (
     groupName === null ||
     groupName === undefined ||
-    groupName.trim().length === 0){
+    groupName.trim().length === 0
+  ) {
     res.statusCode = 400
-    res.json({ error: "Invalid group name" })
+    res.json({ error: "invalid group name" })
     return
-  }// if  not valid group name is entered, error message
+  }
 
-  //
   let putItemParams = {
     TableName: tableName,
     Item: {
       groupName: groupName,
       guid: guid,
-    }
+    },
   }
-
-  try {
-    await ddbDocClient.send(new PutCommand(putItemParams));
-    res.json({ guid: guid });
-  } catch (err) {
-    res.statusCode = 500;
-    res.json({ error: err });
-  }//during setting items, if error occure, 500. Or store guid 
-});// 
-
-
-/*****************************************
- * HTTP Get method to get single object -- *group information reading 
- *****************************************/
-app.get(path + hashKeyPath, function (req, res) {
-  let getItemParams = {
-    TableName: tableName,
-    Key: { [partitionKeyName]: req.params[partitionKeyName] },
-  }
-
-  dynamodb.get(getItemParams, (err, data) => {
+  dynamodb.put(putItemParams, (err, data) => {
     if (err) {
       res.statusCode = 500
-      res.json({ error: "Can't read items: " + err.message })
-    } else if (Object.keys(data).length === 0) {
-      res.statusCode = 404
-      res.json({ error: "Item is not found" })
+      res.json({ error: err })
     } else {
-      res.json({ data: data.Item })
+      res.json({ data: { guid: guid } })
     }
   })
 })
 
-app.listen(3000, function() {
+app.listen(3000, function () {
   console.log("App started")
-});
+})
 
 // Export the app object. When executing the application local this does nothing. However,
 // to port it to AWS Lambda we will create a wrapper around that will load the app from

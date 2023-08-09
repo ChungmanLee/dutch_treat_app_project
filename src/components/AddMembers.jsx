@@ -19,6 +19,8 @@ export const AddMembers = () => {
     
     const navigate = useNavigate()
 
+    const saveGroupMembers = () =>{}
+
     const handleSubmit = (event) => {
         event.preventDefault()
         setValidated(true)
